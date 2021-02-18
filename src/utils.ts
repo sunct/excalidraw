@@ -1,6 +1,7 @@
 import colors from "./colors";
 import {
   CURSOR_TYPE,
+  DEFAULT_VERSION,
   FONT_FAMILY,
   WINDOWS_EMOJI_FALLBACK_FONT,
 } from "./constants";
@@ -360,4 +361,28 @@ export const nFormatter = (num: number, digits: number): string => {
   return (
     (num / si[index].value).toFixed(digits).replace(rx, "$1") + si[index].symbol
   );
+};
+
+export const getVersion = () => {
+  return (
+    document.querySelector<HTMLMetaElement>('meta[name="version"]')?.content ||
+    DEFAULT_VERSION
+  );
+};
+
+// Adapted from https://github.com/Modernizr/Modernizr/blob/master/feature-detects/emoji.js
+export const supportsEmoji = () => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return false;
+  }
+  const offset = 12;
+  ctx.fillStyle = "#f00";
+  ctx.textBaseline = "top";
+  ctx.font = "32px Arial";
+  // Modernizr used 🐨, but it is sort of supported on Windows 7.
+  // Luckily 😀 isn't supported.
+  ctx.fillText("😀", 0, 0);
+  return ctx.getImageData(offset, offset, 1, 1).data[0] !== 0;
 };

@@ -1,10 +1,9 @@
 import React from "react";
-import { EVENT_ACTION, EVENT_CHANGE, trackEvent } from "../analytics";
 import { getDefaultAppState } from "../appState";
-import colors from "../colors";
 import { ColorPicker } from "../components/ColorPicker";
 import { resetZoom, trash, zoomIn, zoomOut } from "../components/icons";
 import { ToolButton } from "../components/ToolButton";
+import { ZOOM_STEP } from "../constants";
 import { getCommonBounds, getNonDeletedElements } from "../element";
 import { newElementWith } from "../element/mutateElement";
 import { ExcalidrawElement } from "../element/types";
@@ -21,15 +20,6 @@ import { register } from "./register";
 export const actionChangeViewBackgroundColor = register({
   name: "changeViewBackgroundColor",
   perform: (_, appState, value) => {
-    if (value !== appState.viewBackgroundColor) {
-      trackEvent(
-        EVENT_CHANGE,
-        "canvas color",
-        colors.canvasBackground.includes(value)
-          ? `${value} (picker ${colors.canvasBackground.indexOf(value)})`
-          : value,
-      );
-    }
     return {
       appState: { ...appState, viewBackgroundColor: value },
       commitToHistory: true,
@@ -52,7 +42,6 @@ export const actionChangeViewBackgroundColor = register({
 export const actionClearCanvas = register({
   name: "clearCanvas",
   perform: (elements, appState: AppState) => {
-    trackEvent(EVENT_ACTION, "clear canvas");
     return {
       elements: elements.map((element) =>
         newElementWith(element, { isDeleted: true }),
@@ -87,8 +76,6 @@ export const actionClearCanvas = register({
   ),
 });
 
-const ZOOM_STEP = 0.1;
-
 export const actionZoomIn = register({
   name: "zoomIn",
   perform: (_elements, appState) => {
@@ -98,7 +85,6 @@ export const actionZoomIn = register({
       { left: appState.offsetLeft, top: appState.offsetTop },
       { x: appState.width / 2, y: appState.height / 2 },
     );
-    trackEvent(EVENT_ACTION, "zoom", "in", zoom.value * 100);
     return {
       appState: {
         ...appState,
@@ -133,7 +119,6 @@ export const actionZoomOut = register({
       { x: appState.width / 2, y: appState.height / 2 },
     );
 
-    trackEvent(EVENT_ACTION, "zoom", "out", zoom.value * 100);
     return {
       appState: {
         ...appState,
@@ -161,7 +146,6 @@ export const actionZoomOut = register({
 export const actionResetZoom = register({
   name: "resetZoom",
   perform: (_elements, appState) => {
-    trackEvent(EVENT_ACTION, "zoom", "reset", 100);
     return {
       appState: {
         ...appState,
@@ -234,12 +218,10 @@ const zoomToFitElements = (
     left: appState.offsetLeft,
     top: appState.offsetTop,
   });
-  const action = zoomToSelection ? "selection" : "fit";
 
   const [x1, y1, x2, y2] = commonBounds;
   const centerX = (x1 + x2) / 2;
   const centerY = (y1 + y2) / 2;
-  trackEvent(EVENT_ACTION, "zoom", action, newZoom.value * 100);
   return {
     appState: {
       ...appState,
